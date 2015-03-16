@@ -1,3 +1,48 @@
+// ******************
+// rc functions
+// ******************
+#define ROL_LO  (1<<(2*ROLL))
+#define ROL_CE  (3<<(2*ROLL))
+#define ROL_HI  (2<<(2*ROLL))
+#define PIT_LO  (1<<(2*PITCH))
+#define PIT_CE  (3<<(2*PITCH))
+#define PIT_HI  (2<<(2*PITCH))
+#define YAW_LO  (1<<(2*YAW))
+#define YAW_CE  (3<<(2*YAW))
+#define YAW_HI  (2<<(2*YAW))
+#define THR_LO  (1<<(2*THROTTLE))
+#define THR_CE  (3<<(2*THROTTLE))
+#define THR_HI  (2<<(2*THROTTLE))
+
+int16_t failsafeEvents = 0;
+volatile int16_t failsafeCnt = 0;
+
+int16_t rcData[RC_CHANS];    // interval [1000;2000]
+int16_t rcSerial[8];         // interval [1000;2000] - is rcData coming from MSP
+int16_t rcCommand[4];        // interval [1000;2000] for THROTTLE and [-500;+500] for ROLL/PITCH/YAW
+uint8_t rcSerialCount = 0;   // a counter to select legacy RX when there is no more MSP rc serial data
+int16_t lookupPitchRollRC[5];// lookup table for expo & RC rate PITCH+ROLL
+uint16_t lookupThrottleRC[11];// lookup table for expo & mid THROTTLE
+
+#if defined(SERIAL_RX)
+  volatile uint8_t  spekFrameFlags;
+  volatile uint32_t spekTimeLast;
+  uint8_t  spekFrameDone;
+#endif
+
+#if defined(OPENLRSv2MULTI)
+  uint8_t pot_P,pot_I; // OpenLRS onboard potentiometers for P and I trim or other usages
+#endif
+
+
+
+
+
+
+
+
+
+
 // in tick()
   static uint8_t rcDelayCommand; // this indicates the number of time (multiple of RC measurement at 50Hz) the sticks must be maintained to run or switch off motors
   static uint8_t rcSticks;       // this hold sticks position for command combos

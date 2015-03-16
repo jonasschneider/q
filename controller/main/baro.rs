@@ -1,3 +1,12 @@
+
+#if BARO
+  int32_t baroPressure;
+  int16_t baroTemperature;
+  int32_t baroPressureSum;
+#endif
+
+
+
 // in tick
 #if BARO && (!defined(SUPPRESS_BARO_ALTHOLD))
   /* Smooth alt change routine , for slow auto and aerophoto modes (in general solution from alexmos). It's slowly increase/decrease
