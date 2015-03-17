@@ -19,7 +19,7 @@ CFLAGS+=-I$(arduino_variant)
 CFLAGS+=-Wall -DF_CPU=16000000UL -Os -mmcu=${mcu}
 #CFLAGS+=-I../reference-multiwii-firmware
 
-LDFLAGS=-mmcu=${mcu}
+LDFLAGS=-mmcu=${mcu} -Wl,--gc-sections
 
 all: upload
 
