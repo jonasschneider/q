@@ -1,7 +1,7 @@
 
 
 // ******** Main Loop *********
-void loop () {
+fn _loop () {
   if ((int16_t)(currentTime-rcTime) >0 ) { // 50Hz
     tickRX();
   } else { // not in rc loop
