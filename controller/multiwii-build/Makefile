@@ -7,9 +7,9 @@
 mcu=atmega2560
 
 AVR_GCC=avr-gcc
-arduino_dot_app=$(shell echo $$HOME)/Downloads/Arduino.app
-arduino_variant=$(arduino_dot_app)/Contents/Java/hardware/arduino/avr/variants/mega
-arduino_core=$(arduino_dot_app)/Contents/Java/hardware/arduino/avr/cores/arduino
+arduino_sdk=arduino-1.6.1
+arduino_variant=${arduino_sdk}/hardware/arduino/avr/variants/mega
+arduino_core=${arduino_sdk}/hardware/arduino/avr/cores/arduino
 CFLAGS=-I$(arduino_core)
 CFLAGS+=-I$(arduino_variant)
 CFLAGS+=-Wall -DF_CPU=16000000UL -Os -mmcu=${mcu}
@@ -40,7 +40,19 @@ clean:
 		rm -f ${LIBARDUINO_OBJS} ${LIBARDUINO_CPPOBJS} libarduino.a $(multiwii_objs) out.hex main.elf arduino-main.o
 
 
-# The following code deals with building libarduino.a
+# The following code deals with building libarduino.a.
+
+arduino-1.6.1/%: arduino-1.6.1
+
+arduino-1.6.1: arduino-1.6.1-linux64.tar.xz
+	tar xf $<; true
+
+arduino-1.6.1-linux64.tar.xz:
+	rm -f $@~
+	curl -L http://arduino.cc/download_handler.php?f=/arduino-1.6.1-linux64.tar.xz > $@~
+	echo 'c344b166efe3a6839cc54af16510b6869cbb4f1fcfaf06a45ca4eba3fca8b2b9  arduino-1.6.1-linux64.tar.xz~' | sha256sum -c
+	mv $@~ $@
+
 LIBARDUINO_HDRS = Arduino.h Client.h HardwareSerial.h HardwareSerial_private.h IPAddress.h Print.h Printable.h Server.h Stream.h USBAPI.h USBCore.h USBDesc.h Udp.h WCharacter.h WString.h binary.h new.h wiring_private.h
 LIBARDUINO_OBJS = WInterrupts.o wiring_analog.o wiring.o wiring_digital.o wiring_pulse.o wiring_shift.o hooks.o
 LIBARDUINO_CPPOBJS = CDC.o HardwareSerial.o HID.o IPAddress.o main.o new.o Print.o Stream.o Tone.o USBCore.o WMath.o WString.o
@@ -51,11 +63,11 @@ LIBARDUINO_CC=avr-gcc
 LIBARDUINO_CPP=avr-g++
 LIBARDUINO_AR=avr-ar
 
-libarduino.a:   ${LIBARDUINO_OBJS}
+libarduino.a: ${LIBARDUINO_OBJS}
 		${LIBARDUINO_AR} crs libarduino.a $(LIBARDUINO_OBJS)
 
-$(LIBARDUINO_OBJS): %.o: $(arduino_dot_app)/Contents/Java/hardware/arduino/avr/cores/arduino/%.c $(foreach hdr,${LIBARDUINO_HDRS},$(arduino_dot_app)/Contents/Java/hardware/arduino/avr/cores/arduino/${hdr})
+$(LIBARDUINO_OBJS): %.o: $(arduino_sdk)/hardware/arduino/avr/cores/arduino/%.c $(foreach hdr,${LIBARDUINO_HDRS},$(arduino_sdk)/hardware/arduino/avr/cores/arduino/${hdr}) $(arduino_sdk)
 		${LIBARDUINO_CC} ${LIBARDUINO_CFLAGS} -c -o $@ $<
 
-$(LIBARDUINO_CPPOBJS): %.o: $(arduino_dot_app)/Contents/Java/hardware/arduino/avr/cores/arduino/%.cpp $(foreach hdr,${HDRS},$(arduino_dot_app)/Contents/Java/hardware/arduino/avr/cores/arduino/${hdr})
+$(LIBARDUINO_CPPOBJS): %.o: $(arduino_sdk)/hardware/arduino/avr/cores/arduino/%.cpp $(foreach hdr,${HDRS},$(arduino_sdk)/hardware/arduino/avr/cores/arduino/${hdr}) $(arduino_sdk)
 		${LIBARDUINO_CPP} ${LIBARDUINO_CPPFLAGS} -c -o $@ $<
