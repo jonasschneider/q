@@ -16,15 +16,14 @@ arduino_core=${arduino_sdk}/hardware/arduino/avr/cores/arduino
 CFLAGS=-I$(arduino_core)
 CFLAGS+=-I$(arduino_variant)
 CFLAGS+=-Wall -DF_CPU=16000000UL -Os -mmcu=${mcu}
-#CFLAGS+=-I../reference-multiwii-firmware
 
 LDFLAGS=-mmcu=${mcu} -Wl,--gc-sections
 
-multiwii_objs=$(foreach o,$(shell cd ../reference-multiwii-firmware; ls *.cpp),$(o).o)
+multiwii_objs=$(foreach o,$(shell cd ../original-multiwii-firmware; ls *.cpp),$(o).o)
 
 all: upload
 
-%.cpp.o: ../reference-multiwii-firmware/%.cpp
+%.cpp.o: ../original-multiwii-firmware/%.cpp
 	avr-gcc -c $(CFLAGS) -o $@ $<
 
 main.elf: libarduino.a $(multiwii_objs) arduino-main.o
