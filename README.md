@@ -1,6 +1,6 @@
 # Get to da chopper
 
-- Install [https://www.vagrantup.com/](Vagrant)
+- Install [Vagrant](https://www.vagrantup.com/)
 - In a terminal:
 
         $ vagrant up
