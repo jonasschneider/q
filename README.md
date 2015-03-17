@@ -1,5 +1,7 @@
 # Get to da chopper
 
+- Get a [NanoWii](http://www.hobbyking.com/hobbyking/store/__22322__multiwii_nanowii_atmega32u4_micro_flight_controller_usb_gyro_acc.html) board.
+
 - Install [Vagrant](https://www.vagrantup.com/)
 - In a terminal:
 
