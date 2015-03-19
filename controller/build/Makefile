@@ -7,7 +7,8 @@
 # your hardware:
 mcu=atmega32u4
 arduino_board=leonardo
-
+#mcu=atmega2560
+#arduino_board=mega
 
 AVR_GCC=avr-gcc
 arduino_sdk=arduino-1.6.1
@@ -19,12 +20,12 @@ CFLAGS+=-Wall -DF_CPU=16000000UL -Os -mmcu=${mcu}
 
 LDFLAGS=-mmcu=${mcu} -Wl,--gc-sections
 
-multiwii_objs=$(foreach o,$(shell cd ../original-multiwii-firmware; ls *.cpp),$(o).o)
-objs=$(multiwii_objs) downlink.pb.c.o
-myobjs=
+multiwii_objs=$(foreach o,$(shell cd ../multiwii; ls *.cpp |grep -v Protocol),$(o).o)
+myobjs=downlink.o
+objs=$(multiwii_objs) downlink.pb.c.o $(myobjs)
 all: controller.hex
 
-%.cpp.o: ../original-multiwii-firmware/%.cpp
+%.cpp.o: ../multiwii/%.cpp ../multiwii/*.h
 	avr-gcc -c $(CFLAGS) -o $@ $<
 
 $(myobjs): %.o: ../%.c
@@ -49,7 +50,7 @@ arduino-main.o: ${arduino_core}/main.cpp
 	avr-gcc -c $(CFLAGS) -o $@ $<
 
 clean:
-		rm -f ${LIBARDUINO_OBJS} ${LIBARDUINO_CPPOBJS} libarduino.a $(multiwii_objs) out.hex main.elf arduino-main.o *.pb *.pb.*
+		rm -f ${LIBARDUINO_OBJS} ${LIBARDUINO_CPPOBJS} libarduino.a $(multiwii_objs) out.hex main.elf arduino-main.o *.pb *.pb.* $(myobjs)
 
 nanopb:
 	sudo pip install protobuf
@@ -81,7 +82,7 @@ LIBARDUINO_CPPOBJS = CDC.o HardwareSerial.o HID.o IPAddress.o main.o new.o Print
 LIBARDUINO_FLAGS = -DF_CPU=16000000UL -Os -mmcu=${mcu}
 
 # set build-time arduino USB constants (see arduino-1.6.1/hardware/arduino/avr/platform.txt)
-LIBARDUINO_FLAGS += -DUSB_VID=0xDEAD -DUSB_PID=0xBEEF #might also need  '-DUSB_MANUFACTURER={build.usb_manufacturer}' '-DUSB_PRODUCT={build.usb_product}'
+LIBARDUINO_FLAGS += -DUSB_VID=0x2341 -DUSB_PID=0x8036 #might also need  '-DUSB_MANUFACTURER={build.usb_manufacturer}' '-DUSB_PRODUCT={build.usb_product}'
 
 LIBARDUINO_CFLAGS = $(LIBARDUINO_FLAGS) -I./ -std=gnu99 -I$(arduino_variant)
 LIBARDUINO_CPPFLAGS = $(LIBARDUINO_FLAGS) -I./ -Os -I$(arduino_variant) -I$(arduino_core)
