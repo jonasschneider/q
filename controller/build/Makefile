@@ -22,7 +22,7 @@ LDFLAGS=-mmcu=${mcu} -Wl,--gc-sections
 multiwii_objs=$(foreach o,$(shell cd ../original-multiwii-firmware; ls *.cpp),$(o).o)
 objs=$(multiwii_objs) downlink.pb.c.o
 myobjs=
-all: upload
+all: controller.hex
 
 %.cpp.o: ../original-multiwii-firmware/%.cpp
 	avr-gcc -c $(CFLAGS) -o $@ $<
@@ -42,11 +42,8 @@ downlink.pb: ../../downlink.proto
 main.elf: libarduino.a $(objs) arduino-main.o
 	avr-gcc $(LDFLAGS) -o $@ $(objs) arduino-main.o -L. -larduino
 
-out.hex: main.elf
-	avr-objcopy -O ihex -R .eeprom main.elf out.hex
-
-upload: out.hex
-	avrdude -c arduino -p m328p -b 57600 -P /dev/ttyUSB0 -U flash:w:out.hex
+controller.hex: main.elf
+	avr-objcopy -O ihex -R .eeprom $< $@
 
 arduino-main.o: ${arduino_core}/main.cpp
 	avr-gcc -c $(CFLAGS) -o $@ $<

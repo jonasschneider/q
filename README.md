@@ -8,7 +8,10 @@
         $ vagrant up
         [..]
         $ vagrant ssh
-        vagrant@vagrant-ubuntu-trusty-64$ cd /vagrant/controller/build
-        vagrant@vagrant-ubuntu-trusty-64$ make
+        vagrant@vagrant$ cd /vagrant/controller/build
+        vagrant@vagrant$ make
 
-  This will build the firmware and flash it!
+  This will build the firmware in `controller/build/controller.hex`.
+- To flash the firmware, run this from outside the VM:
+
+        $ avrdude -c arduino -p m328p -b 57600 -P /dev/ttyUSB0 -U flash:w:out.hex
