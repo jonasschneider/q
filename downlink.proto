@@ -1,0 +1,20 @@
+package q_downlink;
+
+// Actual wire format: 9600baud serial, framing format:
+// - 2   bytes: 0x13 0x37
+// - 2   bytes: length <n>
+// - <n> bytes: <data>
+// - 1   byte : sum of all bytes in <data>
+
+message Frame {
+  required TelemetryUpdate tm = 1;
+}
+
+message TelemetryUpdate {
+  required uint64 t = 1;
+  required uint64 n = 2;
+
+  required float pitch = 3;
+  required float roll = 4;
+  required float yaw = 5;
+}
