@@ -20,14 +20,27 @@ CFLAGS+=-Wall -DF_CPU=16000000UL -Os -mmcu=${mcu}
 LDFLAGS=-mmcu=${mcu} -Wl,--gc-sections
 
 multiwii_objs=$(foreach o,$(shell cd ../original-multiwii-firmware; ls *.cpp),$(o).o)
-
+objs=$(multiwii_objs) downlink.pb.c.o
+myobjs=
 all: upload
 
 %.cpp.o: ../original-multiwii-firmware/%.cpp
 	avr-gcc -c $(CFLAGS) -o $@ $<
 
-main.elf: libarduino.a $(multiwii_objs) arduino-main.o
-	avr-gcc $(LDFLAGS) -o $@ $(multiwii_objs) arduino-main.o -L. -larduino
+$(myobjs): %.o: ../%.c
+	avr-gcc -c $(CFLAGS) -o $@ $<
+
+%.pb.c.o: %.pb.c
+	avr-gcc -c $(CFLAGS) -o $@ -Inanopb $<
+
+downlink.pb.c: downlink.pb nanopb
+	python nanopb/generator/nanopb_generator.py $<
+
+downlink.pb: ../../downlink.proto
+	protoc -o$@ -I../../ $<
+
+main.elf: libarduino.a $(objs) arduino-main.o
+	avr-gcc $(LDFLAGS) -o $@ $(objs) arduino-main.o -L. -larduino
 
 out.hex: main.elf
 	avr-objcopy -O ihex -R .eeprom main.elf out.hex
@@ -39,7 +52,15 @@ arduino-main.o: ${arduino_core}/main.cpp
 	avr-gcc -c $(CFLAGS) -o $@ $<
 
 clean:
-		rm -f ${LIBARDUINO_OBJS} ${LIBARDUINO_CPPOBJS} libarduino.a $(multiwii_objs) out.hex main.elf arduino-main.o
+		rm -f ${LIBARDUINO_OBJS} ${LIBARDUINO_CPPOBJS} libarduino.a $(multiwii_objs) out.hex main.elf arduino-main.o *.pb *.pb.*
+
+nanopb:
+	sudo pip install protobuf
+	rm -fr $@~
+	git clone https://code.google.com/p/nanopb $@~
+	cd $@~; git reset --hard ef422656a57b3f472b192691a40f48d0d72f2927
+	cd $@~/generator/proto; make
+	mv $@~ $@
 
 
 # The following code deals with building libarduino.a.

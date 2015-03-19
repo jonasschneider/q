@@ -2,4 +2,8 @@
 *.a
 *.elf
 *.hex
+
+*.pb*
+
 arduino-*
+nanopb
