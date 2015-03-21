@@ -339,8 +339,8 @@ void vw_setup(uint16_t speed)
 	// Set up digital IO pins
 	pinMode(vw_tx_pin, OUTPUT);
 	pinMode(vw_rx_pin, INPUT);
-	pinMode(vw_ptt_pin, OUTPUT);
-	digitalWrite(vw_ptt_pin, vw_ptt_inverted);
+	//pinMode(vw_ptt_pin, OUTPUT);
+	//digitalWrite(vw_ptt_pin, vw_ptt_inverted);
 }
 
 #elif defined (ARDUINO) // Arduino specific
@@ -349,28 +349,6 @@ void vw_setup(uint16_t speed)
     uint16_t nticks; // number of prescaled ticks needed
     uint8_t prescaler; // Bit values for CS0[2:0]
 
-#ifdef __AVR_ATtiny85__
-    // figure out prescaler value and counter match value
-    prescaler = _timer_calc(speed, (uint8_t)-1, &nticks);
-    if (!prescaler)
-    {
-        return; // fault
-    }
-
-    TCCR0A = 0;
-    TCCR0A = _BV(WGM01); // Turn on CTC mode / Output Compare pins disconnected
-
-    // convert prescaler index to TCCRnB prescaler bits CS00, CS01, CS02
-    TCCR0B = 0;
-    TCCR0B = prescaler; // set CS00, CS01, CS02 (other bits not needed)
-
-    // Number of ticks to count before firing interrupt
-    OCR0A = uint8_t(nticks);
-
-    // Set mask to fire interrupt when OCF0A bit is set in TIFR0
-    TIMSK |= _BV(OCIE0A);
-
-#else // ARDUINO
     // This is the path for most Arduinos
     // figure out prescaler value and counter match value
     prescaler = _timer_calc(speed, (uint16_t)-1, &nticks);
@@ -379,31 +357,23 @@ void vw_setup(uint16_t speed)
         return; // fault
     }
 
-    TCCR1A = 0; // Output Compare pins disconnected
-    TCCR1B = _BV(WGM12); // Turn on CTC mode
+    TCCR2A = 0; // Output Compare pins disconnected
+    TCCR2B = _BV(WGM12); // Turn on CTC mode
 
     // convert prescaler index to TCCRnB prescaler bits CS10, CS11, CS12
-    TCCR1B |= prescaler;
+    TCCR2B |= prescaler;
 
     // Caution: special procedures for setting 16 bit regs
     // is handled by the compiler
-    OCR1A = nticks*2;
+    OCR2A = nticks*2;
     // Enable interrupt
-#ifdef TIMSK1
-    // atmega168
-    TIMSK1 |= _BV(OCIE1A);
-#else
-    // others
-    TIMSK |= _BV(OCIE1A);
-#endif // TIMSK1
-
-#endif // __AVR_ATtiny85__
+    TIMSK2 |= _BV(OCIE2A);
 
     // Set up digital IO pins
     pinMode(vw_tx_pin, OUTPUT);
     pinMode(vw_rx_pin, INPUT);
-    pinMode(vw_ptt_pin, OUTPUT);
-    digitalWrite(vw_ptt_pin, vw_ptt_inverted);
+    //pinMode(vw_ptt_pin, OUTPUT);
+    //digitalWrite(vw_ptt_pin, vw_ptt_inverted);
 }
 
 #endif // ARDUINO
@@ -417,7 +387,7 @@ void vw_tx_start()
     vw_tx_sample = 0;
 
     // Enable the transmitter hardware
-    digitalWrite(vw_ptt_pin, true ^ vw_ptt_inverted);
+    //digitalWrite(vw_ptt_pin, true ^ vw_ptt_inverted);
 
     // Next tick interrupt will send the first bit
     vw_tx_enabled = true;
@@ -427,7 +397,7 @@ void vw_tx_start()
 void vw_tx_stop()
 {
     // Disable the transmitter hardware
-    digitalWrite(vw_ptt_pin, false ^ vw_ptt_inverted);
+    //digitalWrite(vw_ptt_pin, false ^ vw_ptt_inverted);
     digitalWrite(vw_tx_pin, false);
 
     // No more ticks for the transmitter
@@ -570,16 +540,8 @@ uint8_t vw_get_message(uint8_t* buf, uint8_t* len)
 // This is the interrupt service routine called when timer1 overflows
 // Its job is to output the next bit from the transmitter (every 8 calls)
 // and to call the PLL code if the receiver is enabled
-//ISR(SIG_OUTPUT_COMPARE1A)
 #if defined (ARDUINO) // Arduino specific
-
-#ifdef __AVR_ATtiny85__
-SIGNAL(TIM0_COMPA_vect)
-#else // Assume Arduino Uno (328p or similar)
-
-SIGNAL(TIMER1_COMPA_vect)
-#endif // __AVR_ATtiny85__
-
+SIGNAL(TIMER2_COMPA_vect)
 {
     if (vw_rx_enabled && 1)
 	vw_rx_sample = digitalRead(vw_rx_pin);
@@ -614,49 +576,7 @@ SIGNAL(TIMER1_COMPA_vect)
     if (vw_rx_enabled && 1)
 	vw_pll();
 }
-#elif defined(__MSP430G2452__) || defined(__MSP430G2553__) // LaunchPad specific
-void vw_Int_Handler()
-{
-    if (vw_rx_enabled)
-	vw_rx_sample = digitalRead(vw_rx_pin);
-
-    // Do transmitter stuff first to reduce transmitter bit jitter due
-    // to variable receiver processing
-    if (vw_tx_enabled && vw_tx_sample++ == 0)
-    {
-    	// Send next bit
-    	// Symbols are sent LSB first
-    	// Finished sending the whole message? (after waiting one bit period
-    	// since the last bit)
-    	if (vw_tx_index >= vw_tx_len)
-    	{
-    	    vw_tx_stop();
-    	    vw_tx_msg_count++;
-    	}
-    	else
-    	{
-            digitalWrite(vw_tx_pin, vw_tx_buf[vw_tx_index] & (1 << vw_tx_bit++));
-    	    if (vw_tx_bit >= 6)
-    	    {
-    		vw_tx_bit = 0;
-    		vw_tx_index++;
-
-            }
-    	}
-    }
-    if (vw_tx_sample > 7)
-	vw_tx_sample = 0;
-
-    if (vw_rx_enabled)
-	vw_pll();
-}
-
-interrupt(TIMER0_A0_VECTOR) Timer_A_int(void)
-{
-    vw_Int_Handler();
-};
-
-#endif
+#endif // __AVR_ATtiny85__
 
 
 }
