@@ -26,6 +26,8 @@ March  2015     V2.4
 #include "GPS.h"
 #include "Protocol.h"
 
+void mySerialCom();
+
 #include <avr/pgmspace.h>
 
 
@@ -574,6 +576,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     // jonas: disable Multiwii's builtin serial COM
     //serialCom();
   #endif
+  mySerialCom(); // jonas
 
   #if defined(POWERMETER)
     analog.intPowerMeterSum = (pMeter[PMOTOR_SUM]/PLEVELDIV);

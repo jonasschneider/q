@@ -14,21 +14,26 @@ AVR_GCC=avr-gcc
 arduino_sdk=arduino-1.6.1
 arduino_variant=${arduino_sdk}/hardware/arduino/avr/variants/${arduino_board}
 arduino_core=${arduino_sdk}/hardware/arduino/avr/cores/arduino
+
+# some arbitrary version >100 for virtualwire's platform detection
+DEFS=-DF_CPU=16000000UL -DARDUINO=200
 CFLAGS=-I$(arduino_core)
 CFLAGS+=-I$(arduino_variant)
-CFLAGS+=-Wall -DF_CPU=16000000UL -Os -mmcu=${mcu}
+CFLAGS+=-Wall -Os -mmcu=${mcu} $(DEFS)
 
 LDFLAGS=-mmcu=${mcu} -Wl,--gc-sections
 
+CFLAGS+=-I../../lib/virtual_wire
+
 multiwii_objs=$(foreach o,$(shell cd ../multiwii; ls *.cpp |grep -v Protocol),$(o).o)
-myobjs=downlink.o
-objs=$(multiwii_objs) downlink.pb.c.o $(myobjs)
+myobjs=downlink.cpp.o
+objs=$(multiwii_objs) downlink.pb.c.o $(myobjs) virtual_wire.o
 all: controller.hex
 
 %.cpp.o: ../multiwii/%.cpp ../multiwii/*.h
 	avr-gcc -c $(CFLAGS) -o $@ $<
 
-$(myobjs): %.o: ../%.c
+$(myobjs): %.cpp.o: ../%.cpp
 	avr-gcc -c $(CFLAGS) -o $@ $<
 
 %.pb.c.o: %.pb.c
@@ -59,6 +64,13 @@ nanopb:
 	cd $@~; git reset --hard ef422656a57b3f472b192691a40f48d0d72f2927
 	cd $@~/generator/proto; make
 	mv $@~ $@
+
+virtual_wire.o: ../../lib/virtual_wire/virtual_wire.cpp
+	avr-gcc -c $(CFLAGS) -o $@ $<
+
+CFLAGS+=-I../../lib/virtual_wire
+
+
 
 
 # The following code deals with building libarduino.a.
