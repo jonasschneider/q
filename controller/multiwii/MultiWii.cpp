@@ -26,10 +26,12 @@ March  2015     V2.4
 #include "GPS.h"
 #include "Protocol.h"
 
-void mySerialCom();
-
 #include <avr/pgmspace.h>
 
+// jonas
+#include "virtual_wire.h"
+void mySerialCom();
+//
 
 const int rxPin = 2;     // the number of the pushbutton pin
 const int ledPin =  13;      // the number of the LED pin
@@ -769,6 +771,9 @@ void setup() {
   #ifdef DEBUGMSG
     debugmsg_append_str("initialization completed\n");
   #endif
+
+  vw_setup(8*8*8);
+  vw_set_tx_pin(13); // use D13 for now (should additionally flicker the LED)
 }
 
 void go_arm() {
