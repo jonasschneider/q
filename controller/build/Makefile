@@ -23,7 +23,7 @@ CFLAGS+=-Wall -Os -mmcu=${mcu} $(DEFS)
 
 LDFLAGS=-mmcu=${mcu} -Wl,--gc-sections
 
-CFLAGS+=-I../../lib/virtual_wire
+CFLAGS+=-I../../lib/virtual_wire -I../multiwii
 
 multiwii_objs=$(foreach o,$(shell cd ../multiwii; ls *.cpp |grep -v Protocol),$(o).o)
 myobjs=downlink.cpp.o
@@ -55,7 +55,7 @@ arduino-main.o: ${arduino_core}/main.cpp
 	avr-gcc -c $(CFLAGS) -o $@ $<
 
 clean:
-		rm -f ${LIBARDUINO_OBJS} ${LIBARDUINO_CPPOBJS} libarduino.a $(multiwii_objs) out.hex main.elf arduino-main.o *.pb *.pb.* $(myobjs)
+		rm -f ${LIBARDUINO_OBJS} ${LIBARDUINO_CPPOBJS} libarduino.a $(multiwii_objs) out.hex main.elf arduino-main.o *.pb *.pb.* $(objs)
 
 nanopb:
 	sudo pip install protobuf
