@@ -15,6 +15,10 @@ volatile unsigned long pulse_time;
 //you can use this to determine if your receiver has a signal or not.
 volatile unsigned long last_interrupt_time;
 
+#define K 4
+#define N 2**K
+volatile unsigned long movavg = 0;
+
 //calcSignal is the interrupt handler
 void calcSignal()
 {
@@ -34,6 +38,10 @@ void calcSignal()
         {
             //record the pulse time
             pulse_time = micros() - timer_start;
+  
+            // recalculate moving average
+            movavg = movavg + pulse_time - movavg<<K;
+
             //restart the timer
             timer_start = 0;
         }
@@ -48,8 +56,6 @@ void setup() {
   attachInterrupt(1, calcSignal, CHANGE);
 
   Serial.begin(9600);
-  //analogWrite(aTxPin, 120);
-  delay(500);
 }
 
 
@@ -75,15 +81,21 @@ void txloop() {
   //analogWrite(aTxPin,255);
 }
 
+// idee: n>1 bits pro symbol kommunizieren -> mehr abstufungen in der pulsweite -> hoehere datenrate trotz gleicher symbolrate
+
 // tx=10 pw=80, tx=255 pw=53444
 int rxpos = -1;
 unsigned char rcv = 0;
 void rxloop() {
-  unsigned char eightbitval = pulse_time / 8;
-//  Serial.print(eightbitval, DEC);
-//  Serial.print(" -- ");
-//  Serial.print(pulse_time, DEC);
-//  Serial.print("\n");
+  unsigned long v = movavg>>K;
+  unsigned char eightbitval = v / 8;
+  Serial.print(eightbitval, DEC);
+  Serial.print(" -- ");
+  Serial.print(pulse_time, DEC);
+  Serial.print(" -- ");
+  Serial.print(v);
+  Serial.print("\n");
+  movavg = 0;
   if(rxpos == -1) {
     if(eightbitval > 200) { // sync!
       rxpos = 0;
@@ -107,11 +119,11 @@ void rxloop() {
 void loop() {
   n++;
   txloop();
-  delayMicroseconds(10);
+  delayMicroseconds(20);
   rxloop();
 //  delay(1);
-delay(2);
-//delayMicroseconds(500);
+delay(1);
+delayMicroseconds(500);
 //  Serial.write(".");
 }
 
