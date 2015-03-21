@@ -12,6 +12,8 @@ Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/trusty64"
   config.vm.provision "shell", inline: $script
 
+  config.vm.network :forwarded_port, guest: 22, host: 2201, id: "ssh", auto_correct: true
+
   #  # http://spin.atomicobject.com/2014/03/21/smartcard-virtualbox-vm/
   #  config.vm.provider :virtualbox do |vb|
   #   vb.customize ['modifyvm', :id, '--usb', 'on']
