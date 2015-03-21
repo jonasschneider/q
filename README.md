@@ -14,4 +14,11 @@
   This will build the firmware in `controller/build/controller.hex`.
 - To flash the firmware, run this from outside the VM:
 
-        $ avrdude -c arduino -p m328p -b 57600 -P /dev/ttyUSB0 -U flash:w:out.hex
+  For the Arduino Leonardo (like the one on the NanoWii): first, press the RESET button. Then, within two seconds, do this:
+
+        build$ avrdude -patmega32u4 -cavr109 -U flash:w:controller.hex -P /dev/tty.usbmodem1421
+
+  For the Arduino Mega, it's a bit easier:
+
+        build$ avrdude -c arduino -p m2560 -c stk500v2 -b 115200 -P /dev/tty.usbmodem1421 -U flash:w:controller.hex
+
