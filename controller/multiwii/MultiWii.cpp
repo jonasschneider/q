@@ -655,7 +655,6 @@ void setup() {
   pinMode(ledPin, OUTPUT);
   pinMode(rxPin, INPUT);
   pinMode(txPin, OUTPUT);
-  SerialWrite(0, 'x');
 
   LEDPIN_PINMODE;
   POWERPIN_PINMODE;
@@ -845,8 +844,6 @@ void go_disarm() {
 
 // ******** Main Loop *********
 void loop () {
-  SerialWrite(0, 'x');
-
   static uint8_t rcDelayCommand; // this indicates the number of time (multiple of RC measurement at 50Hz) the sticks must be maintained to run or switch off motors
   static uint8_t rcSticks;       // this hold sticks position for command combos
   uint8_t axis,i;
