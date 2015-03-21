@@ -209,9 +209,9 @@ void vw_pll()
 	// If < 5 out of 8, then its declared a 0 bit, else a 1;
 	if (vw_rx_integrator >= 5) {
 	    vw_rx_bits |= 0x800;
-        Serial.print('X');
+        //Serial.print('X');
     } else {
-        Serial.print('-');
+        //Serial.print('-');
     }
 
 	vw_rx_pll_ramp -= VW_RX_RAMP_LEN;
@@ -235,9 +235,9 @@ void vw_pll()
 		// REVISIT: may also include the ACK flag at 0x40
 		if (vw_rx_len == 0)
 		{
-            Serial.print("length:");
-            Serial.print(this_byte, DEC);
-            Serial.print(" ");
+            //Serial.print("length:");
+            //Serial.print(this_byte, DEC);
+            //Serial.print(" ");
 		    // The first byte is the byte count
 		    // Check it for sensibility. It cant be less than 4, since it
 		    // includes the bytes count itself and the 2 byte FCS
@@ -270,104 +270,15 @@ void vw_pll()
 	    vw_rx_bit_count = 0;
 	    vw_rx_len = 0;
 	    vw_rx_done = false; // Too bad if you missed the last message
-        Serial.print("\nGOT START\n");
+        //Serial.print("\nGOT START\n");
 	}
     }
 }
 
-// Common function for setting timer ticks @ prescaler values for speed
-// Returns prescaler index into {0, 1, 8, 64, 256, 1024} array
-// and sets nticks to compare-match value if lower than max_ticks
-// returns 0 & nticks = 0 on fault
-static uint8_t _timer_calc(uint16_t speed, uint16_t max_ticks, uint16_t *nticks)
-{
-    // Clock divider (prescaler) values - 0/3333: error flag
-    uint16_t prescalers[] = {0, 1, 8, 64, 256, 1024, 3333};
-    uint8_t prescaler=0; // index into array & return bit value
-    unsigned long ulticks; // calculate by ntick overflow
-
-    // Div-by-zero protection
-    if (speed == 0)
-    {
-        // signal fault
-        *nticks = 0;
-        return 0;
-    }
-
-    // test increasing prescaler (divisor), decreasing ulticks until no overflow
-    for (prescaler=1; prescaler < 7; prescaler += 1)
-    {
-        // Amount of time per CPU clock tick (in seconds)
-        float clock_time = (1.0 / (float(F_CPU) / float(prescalers[prescaler])));
-        // Fraction of second needed to xmit one bit
-        float bit_time = ((1.0 / float(speed)) / 8.0);
-        // number of prescaled ticks needed to handle bit time @ speed
-        ulticks = long(bit_time / clock_time);
-        // Test if ulticks fits in nticks bitwidth (with 1-tick safety margin)
-        if ((ulticks > 1) && (ulticks < max_ticks))
-        {
-            break; // found prescaler
-        }
-        // Won't fit, check with next prescaler value
-    }
-
-    // Check for error
-    if ((prescaler == 6) || (ulticks < 2) || (ulticks > max_ticks))
-    {
-        // signal fault
-        *nticks = 0;
-        return 0;
-    }
-
-    *nticks = ulticks;
-    return prescaler;
-}
-
-// Speed is in bits per sec RF rate
-#if defined(__MSP430G2452__) || defined(__MSP430G2553__) // LaunchPad specific
 void vw_setup(uint16_t speed)
 {
-	// Calculate the counter overflow count based on the required bit speed
-	// and CPU clock rate
-	uint16_t ocr1a = (F_CPU / 8UL) / speed;
-
-	// This code is for Energia/MSP430
-	TA0CCR0 = ocr1a;				// Ticks for 62,5 us
-	TA0CTL = TASSEL_2 + MC_1;       // SMCLK, up mode
-	TA0CCTL0 |= CCIE;               // CCR0 interrupt enabled
-
-	// Set up digital IO pins
-	pinMode(vw_tx_pin, OUTPUT);
-	pinMode(vw_rx_pin, INPUT);
-	//pinMode(vw_ptt_pin, OUTPUT);
-	//digitalWrite(vw_ptt_pin, vw_ptt_inverted);
-}
-
-#elif defined (ARDUINO) // Arduino specific
-void vw_setup(uint16_t speed)
-{
-    uint16_t nticks; // number of prescaled ticks needed
-    uint8_t prescaler; // Bit values for CS0[2:0]
-
-    // This is the path for most Arduinos
-    // figure out prescaler value and counter match value
-    prescaler = _timer_calc(speed, (uint16_t)-1, &nticks);
-    if (!prescaler)
-    {
-        return; // fault
-    }
-
-    TCCR2A = 0; // Output Compare pins disconnected
-    TCCR2B = _BV(WGM12); // Turn on CTC mode
-
-    // convert prescaler index to TCCRnB prescaler bits CS10, CS11, CS12
-    TCCR2B |= prescaler;
-
-    // Caution: special procedures for setting 16 bit regs
-    // is handled by the compiler
-    OCR2A = nticks*2;
-    // Enable interrupt
-    TIMSK2 |= _BV(OCIE2A);
+    // enable timer compare interrupt in channel A of timer 0
+    TIMSK0 |= (1 << OCIE0A);
 
     // Set up digital IO pins
     pinMode(vw_tx_pin, OUTPUT);
@@ -375,8 +286,6 @@ void vw_setup(uint16_t speed)
     //pinMode(vw_ptt_pin, OUTPUT);
     //digitalWrite(vw_ptt_pin, vw_ptt_inverted);
 }
-
-#endif // ARDUINO
 
 // Start the transmitter, call when the tx buffer is ready to go and vw_tx_len is
 // set to the total number of symbols to send
@@ -540,8 +449,7 @@ uint8_t vw_get_message(uint8_t* buf, uint8_t* len)
 // This is the interrupt service routine called when timer1 overflows
 // Its job is to output the next bit from the transmitter (every 8 calls)
 // and to call the PLL code if the receiver is enabled
-#if defined (ARDUINO) // Arduino specific
-SIGNAL(TIMER2_COMPA_vect)
+ISR(TIMER0_COMPA_vect)
 {
     if (vw_rx_enabled && 1)
 	vw_rx_sample = digitalRead(vw_rx_pin);
@@ -576,7 +484,5 @@ SIGNAL(TIMER2_COMPA_vect)
     if (vw_rx_enabled && 1)
 	vw_pll();
 }
-#endif // __AVR_ATtiny85__
-
 
 }
