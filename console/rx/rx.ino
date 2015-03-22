@@ -10,7 +10,7 @@ void setup()
     vw_set_rx_pin(3);
 
     // with STM32 TX:
-    vw_setup(8*8);
+    vw_setup(8*8*14);
 
     // for Arduino TX
     // The TX's timer0 fires (16 000 000 / 64) / 256 =~ 976 times per second.
@@ -40,5 +40,7 @@ void loop()
                 Serial.print(c);
         }
         Serial.println("\n");
+    } else {
+      Serial.println("fail\n");
     }
 }
