@@ -3,17 +3,24 @@ import time
 import sys
 import struct
 
-sio = serial.Serial("/dev/tty.usbmodem1411",9600)
+## Again: build the controller before running this!
+sys.path.append("./pylib")
+sys.path.append("../controller/build/nanopb/generator/proto")
+import downlink_pb2
+
+sio = serial.Serial("/dev/tty.SerialAdaptor-SPPDev",19200)
 
 while 1:
-  line = sio.readline()
-  if "Got" in line:
-    data = sio.readline().rstrip()
-    if len(data) != 8:
-      print "woops:"
-      print data
+  c = 0
+  while c < 10:
+    ind = sio.read(1)
+    if ind == 'X':
+      c += 1
     else:
-      vals = struct.unpack('hhhh', data)
-      print vals
-    sys.stdout.flush()
+      c = 0
 
+  framelen = struct.unpack('!H', sio.read(2))[0]
+  body = sio.read(framelen)
+  f = downlink_pb2.Frame()
+  f.ParseFromString(body)
+  print f

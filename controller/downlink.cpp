@@ -20,10 +20,13 @@ void mySerialCom() {
   static q_downlink_Frame downframe;
 
   const int SIZE_ESTIMATE = sizeof(q_downlink_Frame); // availableForWrite doesn't use size_t, either..
-
+  Serial.print(Serial1.availableForWrite(), DEC);
+  Serial.print(" ");
+  Serial.print(SIZE_ESTIMATE, DEC);
   if(Serial1.availableForWrite() < SIZE_ESTIMATE) {
     // transmitter is still sending
     skips++;
+    Serial.print("err0!");
     return;
   }
   // we can send the next frame!
@@ -56,6 +59,7 @@ void mySerialCom() {
   if(!ok) {
     // Maybe a buffer overflow? In any case, encoding failed, so bail.
     errors++;
+    Serial.print("err1!");
     return;
   }
 
@@ -63,9 +67,15 @@ void mySerialCom() {
     // Freak out. Our size estimate was off, and now the packet won't fit in the tx buffer.
     // Actually sending it now would block. So don't send.
     errors++;
+    Serial.print("err2!");
     return;
   }
   skips = 0;
 
+  // write the length at the start
+  Serial1.print("XXXXXXXXXX");
+  Serial1.write((char)(s.bytes_written>>8)&0xff);
+  Serial1.write((char)(s.bytes_written)&0xff);
   Serial1.write(buf, s.bytes_written);
+  Serial.print("sent!");
 }

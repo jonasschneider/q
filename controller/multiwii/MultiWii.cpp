@@ -648,6 +648,8 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
 }
 
 void setup() {
+  Serial.begin(9600);
+  Serial.print("hi!\n");
   /*SerialOpen(0,SERIAL0_COM_SPEED);
   #if defined(PROMICRO)
     SerialOpen(1,SERIAL1_COM_SPEED);

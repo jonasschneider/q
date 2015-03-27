@@ -5,10 +5,10 @@
 #     $ find /usr/local/Cellar/avr-gcc/4.8.3/avr/lib | xargs -n 1 -I {} bash -c 'avr-objdump -x {} |grep __eerd_block_m2560 && echo {}'
 
 # your hardware:
-mcu=atmega32u4
-arduino_board=leonardo
-#mcu=atmega2560
-#arduino_board=mega
+# mcu=atmega32u4
+# arduino_board=leonardo
+mcu=atmega2560
+arduino_board=mega
 
 AVR_GCC=avr-gcc
 arduino_sdk=arduino-1.6.1
@@ -17,6 +17,7 @@ arduino_core=${arduino_sdk}/hardware/arduino/avr/cores/arduino
 
 # some arbitrary version >100 for virtualwire's platform detection
 DEFS=-DF_CPU=16000000UL -DARDUINO=200
+DEFS+=-DSERIAL_TX_BUFFER_SIZE=256 -DSERIAL_RX_BUFFER_SIZE=256
 CFLAGS=-I$(arduino_core)
 CFLAGS+=-I$(arduino_variant)
 CFLAGS+=-Wall -Os -mmcu=${mcu} $(DEFS)
