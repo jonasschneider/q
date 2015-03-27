@@ -648,8 +648,6 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
 }
 
 void setup() {
-  Serial.begin(9600);
-  Serial.print("hi!\n");
   /*SerialOpen(0,SERIAL0_COM_SPEED);
   #if defined(PROMICRO)
     SerialOpen(1,SERIAL1_COM_SPEED);
@@ -659,6 +657,8 @@ void setup() {
     SerialOpen(2,SERIAL2_COM_SPEED);
     SerialOpen(3,SERIAL3_COM_SPEED);
   #endif*/
+
+  // talk to the bluetooth module via UART1
   Serial1.begin(19200);
 
   pinMode(ledPin, OUTPUT);
