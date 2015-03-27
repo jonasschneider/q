@@ -1,4 +1,5 @@
 package q_downlink;
+import "nanopb.proto";
 
 message Frame {
   required TelemetryUpdate tm = 1;
@@ -7,6 +8,9 @@ message Frame {
 message TelemetryUpdate {
   required uint64 t = 1;
   required uint64 n = 2;
+  required uint32 skips = 8;
+
+  required uint32 comm_errors = 9;
 
   required bool armed = 6;
 
@@ -14,5 +18,11 @@ message TelemetryUpdate {
   required sint32 accY_smoothed = 4;
   required sint32 accZ_smoothed = 5;
 
+  required sint32 gyroX_smoothed = 11;
+  required sint32 gyroY_smoothed = 12;
+  required sint32 gyroZ_smoothed = 13;
+
   required int32 vbat_smoothed = 7;
+
+  repeated int32 currentMotorValues = 10 [(nanopb).max_count = 4];
 }

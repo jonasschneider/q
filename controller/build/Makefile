@@ -49,7 +49,7 @@ downlink.pb.h: downlink.pb nanopb
 	python nanopb/generator/nanopb_generator.py $<
 
 downlink.pb: ../../downlink.proto
-	protoc -o$@ -I../../ $<
+	protoc -o$@ -I../../ -Inanopb/generator/proto $<
 
 main.elf: libarduino.a $(objs) arduino-main.o
 	avr-gcc $(LDFLAGS) -o $@ $(objs) arduino-main.o -L. -larduino
