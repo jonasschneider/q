@@ -10,13 +10,13 @@ void setup()
     vw_set_rx_pin(3);
 
     // with STM32 TX:
-    vw_setup(8*8*14);
+//    vw_setup(8*8*14);
 
     // for Arduino TX
     // The TX's timer0 fires (16 000 000 / 64) / 256 =~ 976 times per second.
     // Since we need 8 timer firings to transfer a single bit, divide by 8.
     // TODO: fix the 2 factor by removing nticks*2 from the implementation.
-//    vw_setup(122*2);
+    vw_setup(122*2);
 
     vw_rx_start();
 }

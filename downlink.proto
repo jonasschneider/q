@@ -8,7 +8,11 @@ message TelemetryUpdate {
   required uint64 t = 1;
   required uint64 n = 2;
 
-  required float pitch = 3;
-  required float roll = 4;
-  required float yaw = 5;
+  required bool armed = 6;
+
+  required sint32 accX_smoothed = 3;
+  required sint32 accY_smoothed = 4;
+  required sint32 accZ_smoothed = 5;
+
+  required int32 vbat_smoothed = 7;
 }

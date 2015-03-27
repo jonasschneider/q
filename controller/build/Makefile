@@ -23,23 +23,29 @@ CFLAGS+=-Wall -Os -mmcu=${mcu} $(DEFS)
 
 LDFLAGS=-mmcu=${mcu} -Wl,--gc-sections
 
-CFLAGS+=-I../../lib/virtual_wire -I../multiwii
+CFLAGS+=-I../../lib/virtual_wire -I../multiwii -I. -Inanopb
 
 multiwii_objs=$(foreach o,$(shell cd ../multiwii; ls *.cpp |grep -v Protocol),$(o).o)
 myobjs=downlink.cpp.o
-objs=$(multiwii_objs) downlink.pb.c.o $(myobjs) virtual_wire.o
+objs=$(multiwii_objs) downlink.pb.c.o $(myobjs) virtual_wire.o nanopb/pb_common.c.o nanopb/pb_encode.c.o
 all: controller.hex
+
+nanopb/%.c.o: nanopb/%.c
+	avr-gcc -c $(CFLAGS) -o $@ $<
 
 %.cpp.o: ../multiwii/%.cpp ../multiwii/*.h
 	avr-gcc -c $(CFLAGS) -o $@ $<
 
-$(myobjs): %.cpp.o: ../%.cpp
+$(myobjs): %.cpp.o: ../%.cpp downlink.pb.h
 	avr-gcc -c $(CFLAGS) -o $@ $<
 
 %.pb.c.o: %.pb.c
 	avr-gcc -c $(CFLAGS) -o $@ -Inanopb $<
 
 downlink.pb.c: downlink.pb nanopb
+	python nanopb/generator/nanopb_generator.py $<
+
+downlink.pb.h: downlink.pb nanopb
 	python nanopb/generator/nanopb_generator.py $<
 
 downlink.pb: ../../downlink.proto
@@ -88,7 +94,7 @@ arduino-1.6.1-linux64.tar.xz:
 # list out all the files explicitly because make is stupid
 LIBARDUINO_HDRS = Arduino.h Client.h HardwareSerial.h HardwareSerial_private.h IPAddress.h Print.h Printable.h Server.h Stream.h USBAPI.h USBCore.h USBDesc.h Udp.h WCharacter.h WString.h binary.h new.h wiring_private.h
 LIBARDUINO_OBJS = WInterrupts.o wiring_analog.o wiring.o wiring_digital.o wiring_pulse.o wiring_shift.o hooks.o
-LIBARDUINO_CPPOBJS = CDC.o HardwareSerial.o HID.o IPAddress.o main.o new.o Print.o Stream.o Tone.o USBCore.o WMath.o WString.o
+LIBARDUINO_CPPOBJS = CDC.o HardwareSerial.o HardwareSerial0.o HardwareSerial1.o HardwareSerial2.o HardwareSerial3.o HID.o IPAddress.o main.o new.o Print.o Stream.o Tone.o USBCore.o WMath.o WString.o
 
 #TODO: may also need to adjust F_CPU if your clock isn't set to 16Mhz
 LIBARDUINO_FLAGS = -DF_CPU=16000000UL -Os -mmcu=${mcu}

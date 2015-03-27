@@ -482,6 +482,12 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
           analog.vbat = ((vsum /VBAT_SMOOTH) * VBAT_PRESCALER) / conf.vbatscale + VBAT_OFFSET; // result is Vbatt in 0.1V steps
         #endif
       #endif
+
+      if(analog.vbat < 114) {
+        digitalWrite(11, HIGH);
+      } else {
+        digitalWrite(11, LOW);
+      }
     #endif // VBAT
     break;
   }
@@ -642,7 +648,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
 }
 
 void setup() {
-  SerialOpen(0,SERIAL0_COM_SPEED);
+  /*SerialOpen(0,SERIAL0_COM_SPEED);
   #if defined(PROMICRO)
     SerialOpen(1,SERIAL1_COM_SPEED);
   #endif
@@ -650,7 +656,8 @@ void setup() {
     SerialOpen(1,SERIAL1_COM_SPEED);
     SerialOpen(2,SERIAL2_COM_SPEED);
     SerialOpen(3,SERIAL3_COM_SPEED);
-  #endif
+  #endif*/
+  Serial1.begin(19200);
 
   pinMode(ledPin, OUTPUT);
   pinMode(rxPin, INPUT);
